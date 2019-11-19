@@ -27,7 +27,7 @@
 /**
  * @file
  *
- * @brief This file contains fabgl::PS2ControllerClass definition and the PS2Controller instance.
+ * @brief This file contains fabgl::PS2Controller definition.
  */
 
 
@@ -40,6 +40,29 @@
 namespace fabgl {
 
 
+/** \ingroup Enumerations
+ * @brief This enum defines what is connected to PS/2 ports
+ */
+enum class PS2Preset {
+  KeyboardPort0_MousePort1,   /**< Keyboard on Port 0 and Mouse on Port 1 */
+  KeyboardPort0,              /**< Keyboard on Port 0 (no mouse) */
+  MousePort0,                 /**< Mouse on port 0 (no keyboard) */
+};
+
+
+/** \ingroup Enumerations
+ * @brief This enum defines how handle keyboard virtual keys
+ */
+enum class KbdMode {
+  NoVirtualKeys,           /**< No virtual keys are generated */
+  GenerateVirtualKeys,     /**< Virtual keys are generated. You can call Keyboard.isVKDown() only. */
+  CreateVirtualKeysQueue,  /**< Virtual keys are generated and put on a queue. You can call Keyboard.isVKDown(), Keyboard.virtualKeyAvailable() and Keyboard.getNextVirtualKey() */
+};
+
+
+class Keyboard;
+class Mouse;
+
 
 /**
  * @brief The PS2 device controller class.
@@ -47,12 +70,18 @@ namespace fabgl {
  * The PS2 controller uses ULP coprocessor and RTC slow memory to communicate with up to two PS2 devices.<br>
  * The ULP coprocessor continuously monitor CLK and DATA lines for incoming data. Optionally can send commands to the PS2 devices.
  */
-class PS2ControllerClass {
+class PS2Controller {
 
 public:
 
+  PS2Controller();
+
+  // unwanted methods
+  PS2Controller(PS2Controller const&)   = delete;
+  void operator=(PS2Controller const&)  = delete;
+
   /**
-  * @brief Initialize PS2 device controller.
+  * @brief Initializes PS2 device controller.
   *
   * Initializes the PS2 controller assigning GPIOs to DAT and CLK lines.
   *
@@ -64,7 +93,24 @@ public:
   void begin(gpio_num_t port0_clkGPIO, gpio_num_t port0_datGPIO, gpio_num_t port1_clkGPIO = GPIO_NUM_39, gpio_num_t port1_datGPIO = GPIO_NUM_39);
 
   /**
-   * @brief Get the number of scancodes available in the controller buffer.
+  * @brief Initializes PS2 device controller using default GPIOs.
+  *
+  * Initializes the PS2 controller assigning:
+  *   - GPIO_NUM_33 (CLK) and GPIO_NUM_32 (DATA) as PS/2 Port 0
+  *   - GPIO_NUM_26 (CLK) and GPIO_NUM_27 (DATA) as PS/2 Port 1
+  *
+  * @param preset Specifies what is connected to PS/2 ports (mouse, keyboard or boths).
+  * @param keyboardMode Specifies how handle keyboard virtual keys.
+  *
+  * Example:
+  *
+  *     // Keyboard connected to port 0 and mouse to port1
+  *     PSController.begin(PS2Preset::KeyboardPort0_MousePort1);
+  */
+  void begin(PS2Preset preset = PS2Preset::KeyboardPort0_MousePort1, KbdMode keyboardMode = KbdMode::CreateVirtualKeysQueue);
+
+  /**
+   * @brief Gets the number of scancodes available in the controller buffer.
    *
    * @param PS2Port PS2 port number (0 = port 0, 1 = port1).
    *
@@ -75,7 +121,7 @@ public:
   bool waitData(int timeOutMS, int PS2Port);
 
   /**
-   * @brief Get a scancode from the queue.
+   * @brief Gets a scancode from the queue.
    *
    * @param PS2Port PS2 port number (0 = port 0, 1 = port1).
    *
@@ -84,7 +130,7 @@ public:
   int getData(int PS2Port);
 
   /**
-   * @brief Send a command to the device.
+   * @brief Sends a command to the device.
    *
    * @param data Byte to send to the PS2 device.
    * @param PS2Port PS2 port number (0 = port 0, 1 = port1).
@@ -92,7 +138,7 @@ public:
   void sendData(uint8_t data, int PS2Port);
 
   /**
-   * @brief Inject a byte into the RX buffer.
+   * @brief Injects a byte into the RX buffer.
    *
    * Injects a byte as if it were actually sent by the device.
    *
@@ -101,9 +147,54 @@ public:
    */
   void injectInRXBuffer(int value, int PS2Port);
 
+  /**
+   * @brief Suspends PS/2 ports operations
+   */
+  void suspend();
+
+  /**
+   * @brief Resumes PS/2 ports operations
+   */
+  void resume();
+
+  /**
+   * @brief Returns the instance of Keyboard object automatically created by PS2Controller.
+   *
+   * @return A pointer to a Keyboard object
+   */
+  Keyboard * keyboard() { return m_keyboard; }
+
+  void setKeyboard(Keyboard * value) { m_keyboard = value; }
+
+  /**
+   * @brief Returns the instance of Mouse object automatically created by PS2Controller.
+   *
+   * @return A pointer to a Mouse object
+   */
+  Mouse * mouse() { return m_mouse; }
+
+  void setMouse(Mouse * value) { m_mouse = value; }
+
+  /**
+   * @brief Returns the singleton instance of PS2Controller class
+   *
+   * @return A pointer to PS2Controller singleton object
+   */
+  static PS2Controller * instance() { return s_instance; }
+
+
 private:
 
+  void warmInit();
+
   static void IRAM_ATTR rtc_isr(void * arg);
+
+  static PS2Controller * s_instance;
+
+  // Keyboard and Mouse instances can be created by PS2Controller in one of the begin() calls, or can be
+  // set using setKeyboard() and setMouse() calls.
+  Keyboard *            m_keyboard;
+  Mouse *               m_mouse;
 
   // address of next word to read in the circular buffer
   int                   m_readPos[2];
@@ -114,6 +205,10 @@ private:
   // task that is waiting for RX event
   volatile TaskHandle_t m_RXWaitTask[2];
 
+  intr_handle_t         m_isrHandle;
+
+  int16_t               m_suspendCount;       // 0 = not suspended, >0 suspended
+  uint16_t              m_suspendPortsState;  // bit 0 = port 0 was enabled, bit 1 = port 1 was enabled
 };
 
 
@@ -124,6 +219,6 @@ private:
 
 
 
-extern fabgl::PS2ControllerClass PS2Controller;
+
 
 

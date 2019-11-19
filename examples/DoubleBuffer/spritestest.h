@@ -44,7 +44,7 @@ const uint8_t spaceship_data[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0xd9, 0xe9, 0xc0, 0x00, 0x00, 0xd4, 0xd5, 0xd5, 0x00, 0x00, 0x00,
   0x00, 0x00, 0xd4, 0xd4, 0xd5, 0xd5, 0xd5, 0xd5, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
-const Bitmap spaceship = Bitmap(16, 16, &spaceship_data[0]);
+Bitmap spaceship = Bitmap(16, 16, &spaceship_data[0], PixelFormat::RGBA2222);
 
 
 struct MySprite : Sprite {
@@ -73,13 +73,13 @@ public:
 
   void update()
   {
-    Canvas.setBrushColor(Color::Black);
-    Canvas.clear();
+    canvas.setBrushColor(Color::Black);
+    canvas.clear();
 
     for (int i = 0; i < spritesCount_; ++i) {
       MySprite * sprite = &sprites_[i];
-      sprite->fx = twrap<double>(sprite->fx + 3 * cos(sprite->dir), 0, Canvas.getWidth());
-      sprite->fy = twrap<double>(sprite->fy + 3 * sin(sprite->dir), 0, Canvas.getHeight());
+      sprite->fx = twrap<double>(sprite->fx + 3 * cos(sprite->dir), 0, canvas.getWidth());
+      sprite->fy = twrap<double>(sprite->fy + 3 * sin(sprite->dir), 0, canvas.getHeight());
       sprite->moveTo(ceil(sprite->fx), ceil(sprite->fy));
     }
     VGAController.refreshSprites();
@@ -94,8 +94,8 @@ public:
       MySprite * newSprite = &sprites_[spritesCount_++];
       newSprite->addBitmap(&spaceship);
       newSprite->dir = random(0, 360) * PI / 180.0;
-      newSprite->fx = Canvas.getWidth() / 2.0;
-      newSprite->fy = Canvas.getHeight() / 2.0;
+      newSprite->fx = canvas.getWidth() / 2.0;
+      newSprite->fy = canvas.getHeight() / 2.0;
       newSprite->moveTo(ceil(newSprite->fx), ceil(newSprite->fy));
       VGAController.setSprites(sprites_, spritesCount_);
     }
@@ -114,7 +114,7 @@ private:
 
   static const int MAXSPRITES = 40;
 
-  MySprite * sprites_ = NULL;
+  MySprite * sprites_ = nullptr;
 
   int spritesCount_ = 0;
 

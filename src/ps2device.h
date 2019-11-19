@@ -42,7 +42,7 @@ namespace fabgl {
 
 
 
-/**
+/** \ingroup Enumerations
  * @brief Represents the type of device attached to PS/2 port.
  */
 enum PS2Device {
@@ -60,24 +60,22 @@ enum PS2Device {
 /**
  * @brief Base class for PS2 devices (like mouse or keyboard).
  *
- * PS2DeviceClass connects to one port of the PS2 Controller class (fabgl::PS2ControllerClass).<br>
+ * PS2DeviceClass connects to one port of the PS2 Controller class (fabgl::PS2Controller).<br>
  * The PS2 controller uses ULP coprocessor and RTC slow memory to communicate with the PS2 device.<br>
- *
- * Applications should not use PS2DeviceClass directly: use instead fabgl::MouseClass or fabgl::KeyboardClass.
  */
 class PS2DeviceClass {
 
 public:
 
   /**
-   * @brief Identify the device attached to the PS2 port.
+   * @brief Identifies the device attached to the PS2 port.
    *
    * @return The identification ID sent by keyboard.
    */
   PS2Device identify() { PS2Device result; send_cmdIdentify(&result); return result; };
 
   /**
-   * @brief Get exclusive access to the device.
+   * @brief Gets exclusive access to the device.
    *
    * @param timeOutMS Timeout in milliseconds to wait before fail.
    *
@@ -86,7 +84,7 @@ public:
   bool lock(int timeOutMS);
 
   /**
-   * @brief Release device from exclusive access.
+   * @brief Releases device from exclusive access.
    */
   void unlock();
 

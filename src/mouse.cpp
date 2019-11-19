@@ -26,51 +26,56 @@
 
 #include "mouse.h"
 #include "ps2controller.h"
-#include "vgacontroller.h"
+#include "displaycontroller.h"
 
 
-fabgl::MouseClass Mouse;
+
 
 
 
 namespace fabgl {
 
 
-MouseClass::MouseClass()
-  : m_mouseAvailable(false), m_mouseType(LegacyMouse), m_prevDeltaTime(0),
-    m_movementAcceleration(180), m_wheelAcceleration(60000), m_absoluteUpdateTimer(NULL),
-    m_absoluteQueue(NULL), m_updateVGAController(false)
+Mouse::Mouse()
+  : m_mouseAvailable(false),
+    m_mouseType(LegacyMouse),
+    m_prevDeltaTime(0),
+    m_movementAcceleration(180),
+    m_wheelAcceleration(60000),
+    m_absoluteUpdateTimer(nullptr),
+    m_absoluteQueue(nullptr),
+    m_updateDisplayController(nullptr),
+    m_uiApp(nullptr)
 {
 }
 
 
-MouseClass::~MouseClass()
+Mouse::~Mouse()
 {
-  if (m_absoluteUpdateTimer)
-    xTimerDelete(m_absoluteUpdateTimer, portMAX_DELAY);
-  if (m_absoluteQueue)
-    vQueueDelete(m_absoluteQueue);
+  terminateAbsolutePositioner();
 }
 
 
-void MouseClass::begin(int PS2Port)
+void Mouse::begin(int PS2Port)
 {
   PS2DeviceClass::begin(PS2Port);
   reset();
 }
 
 
-void MouseClass::begin(gpio_num_t clkGPIO, gpio_num_t dataGPIO)
+void Mouse::begin(gpio_num_t clkGPIO, gpio_num_t dataGPIO)
 {
-  PS2Controller.begin(clkGPIO, dataGPIO);
+  PS2Controller * PS2 = PS2Controller::instance();
+  PS2->begin(clkGPIO, dataGPIO);
+  PS2->setMouse(this);
   begin(0);
 }
 
 
-bool MouseClass::reset()
+bool Mouse::reset()
 {
   // tries up to six times for mouse reset
-  for (int i = 0; i < 6; ++i) {
+  for (int i = 0; i < 3; ++i) {
     m_mouseAvailable = send_cmdReset();
     if (m_mouseAvailable)
       break;
@@ -92,20 +97,19 @@ bool MouseClass::reset()
 }
 
 
-int MouseClass::getPacketSize()
+int Mouse::getPacketSize()
 {
   return (m_mouseType == Intellimouse ? 4 : 3);
 }
 
 
-
-int MouseClass::deltaAvailable()
+int Mouse::deltaAvailable()
 {
   return dataAvailable() / getPacketSize();
 }
 
 
-bool MouseClass::getNextDelta(MouseDelta * delta, int timeOutMS, bool requestResendOnTimeOut)
+bool Mouse::getNextDelta(MouseDelta * delta, int timeOutMS, bool requestResendOnTimeOut)
 {
   // receive packet
   int packetSize = getPacketSize();
@@ -142,7 +146,7 @@ bool MouseClass::getNextDelta(MouseDelta * delta, int timeOutMS, bool requestRes
 }
 
 
-void MouseClass::setupAbsolutePositioner(int width, int height, bool createAbsolutePositionsQueue, bool updateVGAController, uiApp * app)
+void Mouse::setupAbsolutePositioner(int width, int height, bool createAbsolutePositionsQueue, DisplayController * updateDisplayController, uiApp * app)
 {
   m_area                  = Size(width, height);
   m_status.X              = width >> 1;
@@ -153,7 +157,7 @@ void MouseClass::setupAbsolutePositioner(int width, int height, bool createAbsol
   m_status.buttons.right  = 0;
   m_prevStatus            = m_status;
 
-  m_updateVGAController = updateVGAController;
+  m_updateDisplayController = updateDisplayController;
 
   m_uiApp = app;
 
@@ -161,12 +165,12 @@ void MouseClass::setupAbsolutePositioner(int width, int height, bool createAbsol
     m_absoluteQueue = xQueueCreate(FABGLIB_MOUSE_EVENTS_QUEUE_SIZE, sizeof(MouseStatus));
   }
 
-  if (m_updateVGAController) {
+  if (m_updateDisplayController) {
     // setup initial position
-    VGAController.setMouseCursorPos(m_status.X, m_status.Y);
+    m_updateDisplayController->setMouseCursorPos(m_status.X, m_status.Y);
   }
 
-  if (m_updateVGAController || createAbsolutePositionsQueue || m_uiApp) {
+  if (m_updateDisplayController || createAbsolutePositionsQueue || m_uiApp) {
     // create and start the timer
     m_absoluteUpdateTimer = xTimerCreate("", pdMS_TO_TICKS(10), pdTRUE, this, absoluteUpdateTimerFunc);
     xTimerStart(m_absoluteUpdateTimer, portMAX_DELAY);
@@ -174,7 +178,22 @@ void MouseClass::setupAbsolutePositioner(int width, int height, bool createAbsol
 }
 
 
-void MouseClass::updateAbsolutePosition(MouseDelta * delta)
+void Mouse::terminateAbsolutePositioner()
+{
+  m_updateDisplayController = nullptr;
+  m_uiApp = nullptr;
+  if (m_absoluteQueue) {
+    vQueueDelete(m_absoluteQueue);
+    m_absoluteQueue = nullptr;
+  }
+  if (m_absoluteUpdateTimer) {
+    xTimerDelete(m_absoluteUpdateTimer, portMAX_DELAY);
+    m_absoluteUpdateTimer = nullptr;
+  }
+}
+
+
+void Mouse::updateAbsolutePosition(MouseDelta * delta)
 {
   const int maxDeltaTimeUS = 500000; // after 0.5s doesn't consider acceleration
 
@@ -215,16 +234,16 @@ void MouseClass::updateAbsolutePosition(MouseDelta * delta)
 }
 
 
-void MouseClass::absoluteUpdateTimerFunc(TimerHandle_t xTimer)
+void Mouse::absoluteUpdateTimerFunc(TimerHandle_t xTimer)
 {
-  MouseClass * mouse = (MouseClass*) pvTimerGetTimerID(xTimer);
+  Mouse * mouse = (Mouse*) pvTimerGetTimerID(xTimer);
   MouseDelta delta;
   if (mouse->deltaAvailable() && mouse->getNextDelta(&delta, 0, false)) {
     mouse->updateAbsolutePosition(&delta);
 
     // VGA Controller
-    if (mouse->m_updateVGAController)
-      VGAController.setMouseCursorPos(mouse->m_status.X, mouse->m_status.Y);
+    if (mouse->m_updateDisplayController)
+      mouse->m_updateDisplayController->setMouseCursorPos(mouse->m_status.X, mouse->m_status.Y);
 
     // queue (if you need availableStatus() or getNextStatus())
     if (mouse->m_absoluteQueue) {
@@ -235,35 +254,35 @@ void MouseClass::absoluteUpdateTimerFunc(TimerHandle_t xTimer)
       // generate uiApp events
       if (mouse->m_prevStatus.X != mouse->m_status.X || mouse->m_prevStatus.Y != mouse->m_status.Y) {
         // X and Y movement: UIEVT_MOUSEMOVE
-        uiEvent evt = uiEvent(NULL, UIEVT_MOUSEMOVE);
+        uiEvent evt = uiEvent(nullptr, UIEVT_MOUSEMOVE);
         evt.params.mouse.status = mouse->m_status;
         evt.params.mouse.changedButton = 0;
         mouse->m_uiApp->postEvent(&evt);
       }
       if (mouse->m_status.wheelDelta != 0) {
         // wheel movement: UIEVT_MOUSEWHEEL
-        uiEvent evt = uiEvent(NULL, UIEVT_MOUSEWHEEL);
+        uiEvent evt = uiEvent(nullptr, UIEVT_MOUSEWHEEL);
         evt.params.mouse.status = mouse->m_status;
         evt.params.mouse.changedButton = 0;
         mouse->m_uiApp->postEvent(&evt);
       }
       if (mouse->m_prevStatus.buttons.left != mouse->m_status.buttons.left) {
         // left button: UIEVT_MOUSEBUTTONDOWN, UIEVT_MOUSEBUTTONUP
-        uiEvent evt = uiEvent(NULL, mouse->m_status.buttons.left ? UIEVT_MOUSEBUTTONDOWN : UIEVT_MOUSEBUTTONUP);
+        uiEvent evt = uiEvent(nullptr, mouse->m_status.buttons.left ? UIEVT_MOUSEBUTTONDOWN : UIEVT_MOUSEBUTTONUP);
         evt.params.mouse.status = mouse->m_status;
         evt.params.mouse.changedButton = 1;
         mouse->m_uiApp->postEvent(&evt);
       }
       if (mouse->m_prevStatus.buttons.middle != mouse->m_status.buttons.middle) {
         // middle button: UIEVT_MOUSEBUTTONDOWN, UIEVT_MOUSEBUTTONUP
-        uiEvent evt = uiEvent(NULL, mouse->m_status.buttons.middle ? UIEVT_MOUSEBUTTONDOWN : UIEVT_MOUSEBUTTONUP);
+        uiEvent evt = uiEvent(nullptr, mouse->m_status.buttons.middle ? UIEVT_MOUSEBUTTONDOWN : UIEVT_MOUSEBUTTONUP);
         evt.params.mouse.status = mouse->m_status;
         evt.params.mouse.changedButton = 2;
         mouse->m_uiApp->postEvent(&evt);
       }
       if (mouse->m_prevStatus.buttons.right != mouse->m_status.buttons.right) {
         // right button: UIEVT_MOUSEBUTTONDOWN, UIEVT_MOUSEBUTTONUP
-        uiEvent evt = uiEvent(NULL, mouse->m_status.buttons.right ? UIEVT_MOUSEBUTTONDOWN : UIEVT_MOUSEBUTTONUP);
+        uiEvent evt = uiEvent(nullptr, mouse->m_status.buttons.right ? UIEVT_MOUSEBUTTONDOWN : UIEVT_MOUSEBUTTONUP);
         evt.params.mouse.status = mouse->m_status;
         evt.params.mouse.changedButton = 3;
         mouse->m_uiApp->postEvent(&evt);
@@ -274,13 +293,13 @@ void MouseClass::absoluteUpdateTimerFunc(TimerHandle_t xTimer)
 }
 
 
-int MouseClass::availableStatus()
+int Mouse::availableStatus()
 {
   return m_absoluteQueue ? uxQueueMessagesWaiting(m_absoluteQueue) : 0;
 }
 
 
-MouseStatus MouseClass::getNextStatus(int timeOutMS)
+MouseStatus Mouse::getNextStatus(int timeOutMS)
 {
   MouseStatus status;
   if (m_absoluteQueue)

@@ -23,35 +23,8 @@
 #include "fabgl.h"
 
 
-/* * * *  C O N F I G U R A T I O N  * * * */
-
-// select one color configuration
-#define USE_8_COLORS  0
-#define USE_64_COLORS 1
-
-// indicate VGA GPIOs to use for selected color configuration
-#if USE_8_COLORS
-  #define VGA_RED    GPIO_NUM_22
-  #define VGA_GREEN  GPIO_NUM_21
-  #define VGA_BLUE   GPIO_NUM_19
-  #define VGA_HSYNC  GPIO_NUM_18
-  #define VGA_VSYNC  GPIO_NUM_5
-#elif USE_64_COLORS
-  #define VGA_RED1   GPIO_NUM_22
-  #define VGA_RED0   GPIO_NUM_21
-  #define VGA_GREEN1 GPIO_NUM_19
-  #define VGA_GREEN0 GPIO_NUM_18
-  #define VGA_BLUE1  GPIO_NUM_5
-  #define VGA_BLUE0  GPIO_NUM_4
-  #define VGA_HSYNC  GPIO_NUM_23
-  #define VGA_VSYNC  GPIO_NUM_15
-#endif
-
-/* * * *  E N D   O F   C O N F I G U R A T I O N  * * * */
-
-
-
 const char * PresetResolutions[] = {
+  VGA_256x384_60Hz,
   VGA_320x200_75Hz,
   QVGA_320x240_60Hz,
   VGA_400x300_60Hz,
@@ -82,11 +55,14 @@ const char * PresetResolutions[] = {
 
 
 
-int currentResolution = 0/*8*/;  // VGA_640x350_70HzAlt1
+int currentResolution = 11;  // VGA_640x350_70HzAlt1
 int moveX = 0;
 int moveY = 0;
 int shrinkX = 0;
 int shrinkY = 0;
+
+
+fabgl::VGAController VGAController;
 
 
 
@@ -134,9 +110,9 @@ void printInfo()
                 t->VVisibleArea + t->VFrontPorch + t->VSyncPulse + t->VBackPorch,
                 t->HSyncLogic, t->VSyncLogic,
                 t->scanCount == 2 ? "DoubleScan" : "",
-                t->HStartingBlock == ScreenBlock::FrontPorch ? "FrontPorchBegins" :
-                (t->HStartingBlock == ScreenBlock::Sync ? "SyncBegins" :
-                (t->HStartingBlock == ScreenBlock::BackPorch ? "BackPorchBegins" : "VisibleBegins")));
+                t->HStartingBlock == VGAScanStart::FrontPorch ? "FrontPorchBegins" :
+                (t->HStartingBlock == VGAScanStart::Sync ? "SyncBegins" :
+                (t->HStartingBlock == VGAScanStart::BackPorch ? "BackPorchBegins" : "VisibleBegins")));
 
   //Serial.printf("VFront = %d, VSync = %d, VBack = %d\n", t->VFrontPorch, t->VSyncPulse, t->VBackPorch);
 
@@ -145,7 +121,7 @@ void printInfo()
   if (shrinkX || shrinkY)
     Serial.printf("shrinkScreen(%d, %d)\n", shrinkX, shrinkY);
   Serial.printf("Screen size   : %d x %d\n", VGAController.getScreenWidth(), VGAController.getScreenHeight());
-  Serial.printf("Viewport size : %d x %d\n", Canvas.getWidth(), Canvas.getHeight());
+  Serial.printf("Viewport size : %d x %d\n", VGAController.getViewPortWidth(), VGAController.getViewPortHeight());
   Serial.printf("Free memory (total, min, largest): %d, %d, %d\n\n", heap_caps_get_free_size(MALLOC_CAP_DMA),
                                                                    heap_caps_get_minimum_free_size(MALLOC_CAP_DMA),
                                                                    heap_caps_get_largest_free_block(MALLOC_CAP_DMA));
@@ -154,29 +130,30 @@ void printInfo()
 
 void updateScreen()
 {
-  Canvas.setPenColor(Color::BrightRed);
-  Canvas.setBrushColor(Color::BrightBlue);
-  Canvas.clear();
-  Canvas.fillRectangle(0, 0, Canvas.getWidth() - 1, Canvas.getHeight() - 1);
-  Canvas.drawRectangle(0, 0, Canvas.getWidth() - 1, Canvas.getHeight() - 1);
+  Canvas cv(&VGAController);
+  cv.setPenColor(Color::BrightRed);
+  cv.setBrushColor(Color::BrightBlue);
+  cv.clear();
+  cv.fillRectangle(0, 0, cv.getWidth() - 1, cv.getHeight() - 1);
+  cv.drawRectangle(0, 0, cv.getWidth() - 1, cv.getHeight() - 1);
 
-  Canvas.setPenColor(Color::Black);
-  Canvas.setBrushColor(Color::BrightYellow);
-  Canvas.selectFont(Canvas.getPresetFontInfo(40, 14));
-  Canvas.setGlyphOptions(GlyphOptions().FillBackground(true).DoubleWidth(1));
-  Canvas.drawText(40, 20, VGAController.getResolutionTimings()->label);
+  cv.setPenColor(Color::Black);
+  cv.setBrushColor(Color::BrightYellow);
+  cv.selectFont(cv.getPresetFontInfo(40, 14));
+  cv.setGlyphOptions(GlyphOptions().FillBackground(true).DoubleWidth(1));
+  cv.drawText(40, 20, VGAController.getResolutionTimings()->label);
 
-  Canvas.setGlyphOptions(GlyphOptions());
-  Canvas.setPenColor(Color::BrightWhite);
-  Canvas.setBrushColor(Color::BrightBlue);
-  Canvas.drawTextFmt(40, 40, "Screen Size   : %d x %d", VGAController.getScreenWidth(), VGAController.getScreenHeight());
-  Canvas.drawTextFmt(40, 60, "Viewport Size : %d x %d", Canvas.getWidth(), Canvas.getHeight());
-  Canvas.drawText(40, 80,    "Commands (More on UART):");
-  Canvas.drawText(40, 100,   "  w = Move Up    z = Move Down");
-  Canvas.drawText(40, 120,   "  a = Move Left  s = Move Right");
-  Canvas.drawText(40, 140,   "  + = Next Resolution");
-  Canvas.setPenColor(Color::BrightGreen);
-  Canvas.drawRectangle(35, 15, 295, 155);
+  cv.setGlyphOptions(GlyphOptions());
+  cv.setPenColor(Color::BrightWhite);
+  cv.setBrushColor(Color::BrightBlue);
+  cv.drawTextFmt(40, 40, "Screen Size   : %d x %d", VGAController.getScreenWidth(), VGAController.getScreenHeight());
+  cv.drawTextFmt(40, 60, "Viewport Size : %d x %d", cv.getWidth(), cv.getHeight());
+  cv.drawText(40, 80,    "Commands (More on UART):");
+  cv.drawText(40, 100,   "  w = Move Up    z = Move Down");
+  cv.drawText(40, 120,   "  a = Move Left  s = Move Right");
+  cv.drawText(40, 140,   "  + = Next Resolution");
+  cv.setPenColor(Color::BrightGreen);
+  cv.drawRectangle(35, 15, 295, 155);
 }
 
 
@@ -188,12 +165,7 @@ void setup()
   // avoid garbage into the UART
   delay(500);
 
-  #if USE_8_COLORS
-  VGAController.begin(VGA_RED, VGA_GREEN, VGA_BLUE, VGA_HSYNC, VGA_VSYNC);
-  #elif USE_64_COLORS
-  VGAController.begin(VGA_RED1, VGA_RED0, VGA_GREEN1, VGA_GREEN0, VGA_BLUE1, VGA_BLUE0, VGA_HSYNC, VGA_VSYNC);
-  #endif
-
+  VGAController.begin();
   VGAController.setResolution(PresetResolutions[currentResolution]);
   updateScreen();
   printHelp();
@@ -203,7 +175,7 @@ void setup()
 
 void loop()
 {
-  fabgl::Timings t;
+  fabgl::VGATimings t;
 
   if (Serial.available() > 0) {
     char c = Serial.read();
@@ -316,17 +288,17 @@ void loop()
       case '.':
         t = *VGAController.getResolutionTimings();
         switch (t.HStartingBlock) {
-          case ScreenBlock::FrontPorch:
-            t.HStartingBlock = ScreenBlock::Sync;
+          case VGAScanStart::FrontPorch:
+            t.HStartingBlock = VGAScanStart::Sync;
             break;
-          case ScreenBlock::Sync:
-            t.HStartingBlock = ScreenBlock::BackPorch;
+          case VGAScanStart::Sync:
+            t.HStartingBlock = VGAScanStart::BackPorch;
             break;
-          case ScreenBlock::BackPorch:
-            t.HStartingBlock = ScreenBlock::VisibleArea;
+          case VGAScanStart::BackPorch:
+            t.HStartingBlock = VGAScanStart::VisibleArea;
             break;
-          case ScreenBlock::VisibleArea:
-            t.HStartingBlock = ScreenBlock::FrontPorch;
+          case VGAScanStart::VisibleArea:
+            t.HStartingBlock = VGAScanStart::FrontPorch;
             break;
         }
         VGAController.setResolution(t);

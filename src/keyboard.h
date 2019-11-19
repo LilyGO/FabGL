@@ -27,7 +27,7 @@
 /**
  * @file
  *
- * @brief This file contains fabgl::KeyboardClass definition and the Keyboard instance.
+ * @brief This file contains fabgl::Keyboard definition.
  */
 
 
@@ -35,6 +35,7 @@
 
 #include "fabglconf.h"
 #include "ps2device.h"
+#include "fabui.h"
 
 
 namespace fabgl {
@@ -80,197 +81,6 @@ namespace fabgl {
 
 
 
-/**
- * @brief Represents each possible real or derived (SHIFT + real) key.
- */
-enum VirtualKey {
-  VK_NONE,            /**< No character (marks the first virtual key) */
-
-  VK_SPACE,           /**< Space */
-  VK_0,               /**< Number 0 */
-  VK_1,               /**< Number 1 */
-  VK_2,               /**< Number 2 */
-  VK_3,               /**< Number 3 */
-  VK_4,               /**< Number 4 */
-  VK_5,               /**< Number 5 */
-  VK_6,               /**< Number 6 */
-  VK_7,               /**< Number 7 */
-  VK_8,               /**< Number 8 */
-  VK_9,               /**< Number 9 */
-  VK_KP_0,            /**< Keypad number 0 */
-  VK_KP_1,            /**< Keypad number 1 */
-  VK_KP_2,            /**< Keypad number 2 */
-  VK_KP_3,            /**< Keypad number 3 */
-  VK_KP_4,            /**< Keypad number 4 */
-  VK_KP_5,            /**< Keypad number 5 */
-  VK_KP_6,            /**< Keypad number 6 */
-  VK_KP_7,            /**< Keypad number 7 */
-  VK_KP_8,            /**< Keypad number 8 */
-  VK_KP_9,            /**< Keypad number 9 */
-  VK_a,               /**< Lower case letter 'a' */
-  VK_b,               /**< Lower case letter 'b' */
-  VK_c,               /**< Lower case letter 'c' */
-  VK_d,               /**< Lower case letter 'd' */
-  VK_e,               /**< Lower case letter 'e' */
-  VK_f,               /**< Lower case letter 'f' */
-  VK_g,               /**< Lower case letter 'g' */
-  VK_h,               /**< Lower case letter 'h' */
-  VK_i,               /**< Lower case letter 'i' */
-  VK_j,               /**< Lower case letter 'j' */
-  VK_k,               /**< Lower case letter 'k' */
-  VK_l,               /**< Lower case letter 'l' */
-  VK_m,               /**< Lower case letter 'm' */
-  VK_n,               /**< Lower case letter 'n' */
-  VK_o,               /**< Lower case letter 'o' */
-  VK_p,               /**< Lower case letter 'p' */
-  VK_q,               /**< Lower case letter 'q' */
-  VK_r,               /**< Lower case letter 'r' */
-  VK_s,               /**< Lower case letter 's' */
-  VK_t,               /**< Lower case letter 't' */
-  VK_u,               /**< Lower case letter 'u' */
-  VK_v,               /**< Lower case letter 'v' */
-  VK_w,               /**< Lower case letter 'w' */
-  VK_x,               /**< Lower case letter 'x' */
-  VK_y,               /**< Lower case letter 'y' */
-  VK_z,               /**< Lower case letter 'z' */
-  VK_A,               /**< Upper case letter 'A' */
-  VK_B,               /**< Upper case letter 'B' */
-  VK_C,               /**< Upper case letter 'C' */
-  VK_D,               /**< Upper case letter 'D' */
-  VK_E,               /**< Upper case letter 'E' */
-  VK_F,               /**< Upper case letter 'F' */
-  VK_G,               /**< Upper case letter 'G' */
-  VK_H,               /**< Upper case letter 'H' */
-  VK_I,               /**< Upper case letter 'I' */
-  VK_J,               /**< Upper case letter 'J' */
-  VK_K,               /**< Upper case letter 'K' */
-  VK_L,               /**< Upper case letter 'L' */
-  VK_M,               /**< Upper case letter 'M' */
-  VK_N,               /**< Upper case letter 'N' */
-  VK_O,               /**< Upper case letter 'O' */
-  VK_P,               /**< Upper case letter 'P' */
-  VK_Q,               /**< Upper case letter 'Q' */
-  VK_R,               /**< Upper case letter 'R' */
-  VK_S,               /**< Upper case letter 'S' */
-  VK_T,               /**< Upper case letter 'T' */
-  VK_U,               /**< Upper case letter 'U' */
-  VK_V,               /**< Upper case letter 'V' */
-  VK_W,               /**< Upper case letter 'W' */
-  VK_X,               /**< Upper case letter 'X' */
-  VK_Y,               /**< Upper case letter 'Y' */
-  VK_Z,               /**< Upper case letter 'Z' */
-  VK_GRAVEACCENT,     /**< Grave accent: ` */
-  VK_ACUTEACCENT,     /**< Acute accent: ´ */
-  VK_QUOTE,           /**< Quote: ' */
-  VK_QUOTEDBL,        /**< Double quote: " */
-  VK_EQUALS,          /**< Equals: = */
-  VK_MINUS,           /**< Minus: - */
-  VK_KP_MINUS,        /**< Keypad minus: - */
-  VK_PLUS,            /**< Plus: + */
-  VK_KP_PLUS,         /**< Keypad plus: + */
-  VK_KP_MULTIPLY,     /**< Keypad multiply: * */
-  VK_ASTERISK,        /**< Asterisk: * */
-  VK_BACKSLASH,       /**< Backslash: \ */
-  VK_KP_DIVIDE,       /**< Keypad divide: / */
-  VK_SLASH,           /**< Slash: / */
-  VK_KP_PERIOD,       /**< Keypad period: . */
-  VK_PERIOD,          /**< Period: . */
-  VK_COLON,           /**< Colon: : */
-  VK_COMMA,           /**< Comma: , */
-  VK_SEMICOLON,       /**< Semicolon: ; */
-  VK_AMPERSAND,       /**< Ampersand: & */
-  VK_VERTICALBAR,     /**< Vertical bar: | */
-  VK_HASH,            /**< Hash: # */
-  VK_AT,              /**< At: @ */
-  VK_CARET,           /**< Caret: ^ */
-  VK_DOLLAR,          /**< Dollar: $ */
-  VK_POUND,           /**< Pound: £ */
-  VK_EURO,            /**< Euro: € */
-  VK_PERCENT,         /**< Percent: % */
-  VK_EXCLAIM,         /**< Exclamation mark: ! */
-  VK_QUESTION,        /**< Question mark: ? */
-  VK_LEFTBRACE,       /**< Left brace: { */
-  VK_RIGHTBRACE,      /**< Right brace: } */
-  VK_LEFTBRACKET,     /**< Left bracket: [ */
-  VK_RIGHTBRACKET,    /**< Right bracket: ] */
-  VK_LEFTPAREN,       /**< Left parenthesis: ( */
-  VK_RIGHTPAREN,      /**< Right parenthesis: ) */
-  VK_LESS,            /**< Less: < */
-  VK_GREATER,         /**< Greater: > */
-  VK_UNDERSCORE,      /**< Underscore: _ */
-  VK_DEGREE,          /**< Degree: ° */
-  VK_SECTION,         /**< Section: § */
-  VK_TILDE,           /**< Tilde: ~ */
-  VK_NEGATION,        /**< Negation: ¬ */
-  VK_LSHIFT,          /**< Left SHIFT */
-  VK_RSHIFT,          /**< Right SHIFT */
-  VK_LALT,            /**< Left ALT */
-  VK_RALT,            /**< Right ALT */
-  VK_LCTRL,           /**< Left CTRL */
-  VK_RCTRL,           /**< Right CTRL */
-  VK_LGUI,            /**< Left GUI */
-  VK_RGUI,            /**< Right GUI */
-  VK_ESCAPE,          /**< ESC */
-  VK_PRINTSCREEN1,    /**< PRINTSCREEN is translated as separated VK_PRINTSCREEN1 and VK_PRINTSCREEN2. VK_PRINTSCREEN2 is also generated by CTRL or SHIFT + PRINTSCREEN. So pressing PRINTSCREEN both VK_PRINTSCREEN1 and VK_PRINTSCREEN2 are generated, while pressing CTRL+PRINTSCREEN or SHIFT+PRINTSCREEN only VK_PRINTSCREEN2 is generated. */
-  VK_PRINTSCREEN2,    /**< PRINTSCREEN. See VK_PRINTSCREEN1 */
-  VK_SYSREQ,          /**< SYSREQ */
-  VK_INSERT,          /**< INS */
-  VK_KP_INSERT,       /**< Keypad INS */
-  VK_DELETE,          /**< DEL */
-  VK_KP_DELETE,       /**< Keypad DEL */
-  VK_BACKSPACE,       /**< Backspace */
-  VK_HOME,            /**< HOME */
-  VK_KP_HOME,         /**< Keypad HOME */
-  VK_END,             /**< END */
-  VK_KP_END,          /**< Keypad END */
-  VK_PAUSE,           /**< PAUSE */
-  VK_BREAK,           /**< CTRL + PAUSE */
-  VK_SCROLLLOCK,      /**< SCROLLLOCK */
-  VK_NUMLOCK,         /**< NUMLOCK */
-  VK_CAPSLOCK,        /**< CAPSLOCK */
-  VK_TAB,             /**< TAB */
-  VK_RETURN,          /**< RETURN */
-  VK_KP_ENTER,        /**< Keypad ENTER */
-  VK_APPLICATION,     /**< APPLICATION / MENU key */
-  VK_PAGEUP,          /**< PAGEUP */
-  VK_KP_PAGEUP,       /**< Keypad PAGEUP */
-  VK_PAGEDOWN,        /**< PAGEDOWN */
-  VK_KP_PAGEDOWN,     /**< Keypad PAGEDOWN */
-  VK_UP,              /**< Cursor UP */
-  VK_KP_UP,           /**< Keypad cursor UP  */
-  VK_DOWN,            /**< Cursor DOWN */
-  VK_KP_DOWN,         /**< Keypad cursor DOWN */
-  VK_LEFT,            /**< Cursor LEFT */
-  VK_KP_LEFT,         /**< Keypad cursor LEFT */
-  VK_RIGHT,           /**< Cursor RIGHT */
-  VK_KP_RIGHT,        /**< Keypad cursor RIGHT */
-  VK_KP_CENTER,       /**< Keypad CENTER key */
-  VK_F1,              /**< F1 function key */
-  VK_F2,              /**< F2 function key */
-  VK_F3,              /**< F3 function key */
-  VK_F4,              /**< F4 function key */
-  VK_F5,              /**< F5 function key */
-  VK_F6,              /**< F6 function key */
-  VK_F7,              /**< F7 function key */
-  VK_F8,              /**< F8 function key */
-  VK_F9,              /**< F9 function key */
-  VK_F10,             /**< F10 function key */
-  VK_F11,             /**< F11 function key */
-  VK_F12,             /**< F12 function key */
-  VK_GRAVE_a,         /**< Grave 'a': à */
-  VK_GRAVE_e,         /**< Grave 'e': è */
-  VK_ACUTE_e,         /**< Acute 'e': é */
-  VK_GRAVE_i,         /**< Grave 'i': ì */
-  VK_GRAVE_o,         /**< Grave 'o': ò */
-  VK_GRAVE_u,         /**< Grave 'u': ù */
-  VK_CEDILLA_c,       /**< Cedilla 'c': ç */
-  VK_ESZETT,          /**< Eszett: ß */
-  VK_UMLAUT_u,        /**< Umlaut 'u': ü */
-  VK_UMLAUT_o,        /**< Umlaut 'o': ö */
-  VK_UMLAUT_a,        /**< Umlaut 'a': ä */
-
-  VK_LAST,            // marks the last virtual key
-};
 
 
 /**
@@ -324,7 +134,7 @@ extern const KeyboardLayout ItalianLayout;
 /**
  * @brief The PS2 Keyboard controller class.
  *
- * KeyboardClass connects to one port of the PS2 Controller class (fabgl::PS2ControllerClass) and provides the logic
+ * Keyboard connects to one port of the PS2 Controller class (fabgl::PS2Controller) and provides the logic
  * that converts scancodes to virtual keys or ASCII (and ANSI) codes.<br>
  * It optionally creates a task that waits for scan codes from the PS2 device and puts virtual keys in a queue.<br>
  * The PS2 controller uses ULP coprocessor and RTC slow memory to communicate with the PS2 device.<br>
@@ -333,10 +143,12 @@ extern const KeyboardLayout ItalianLayout;
  * There are three predefined kayboard layouts: US (USA), UK (United Kingdom), DE (German) and IT (Italian). Other layout can be added
  * inheriting from US or from any other layout.
  *
- * Applications do not need to create an instance of KeyboardClass because an instance named Keyboard is created automatically.
+ * Applications do not need to create an instance of Keyboard because an instance named Keyboard is created automatically.
  *
  * Example:
  *
+ *     fabgl::Keyboard Keyboard;
+ *     
  *     // Setup pins GPIO33 for CLK and GPIO32 for DATA
  *     Keyboard.begin(GPIO_NUM_33, GPIO_NUM_32);  // clk, dat
  *
@@ -345,25 +157,25 @@ extern const KeyboardLayout ItalianLayout;
  *       Serial.printf("VirtualKey = %s\n", Keyboard.virtualKeyToString(Keyboard.getNextVirtualKey()));
  *
  */
-class KeyboardClass : public PS2DeviceClass {
+class Keyboard : public PS2DeviceClass {
 
 public:
 
-  KeyboardClass();
+  Keyboard();
 
   /**
-   * @brief Initialize KeyboardClass specifying CLOCK and DATA GPIOs.
+   * @brief Initializes Keyboard specifying CLOCK and DATA GPIOs.
    *
-   * A reset command (KeyboardClass.reset() method) is automatically sent to the keyboard.<br>
-   * This method also initializes the PS2ControllerClass to use port 0 only.
+   * A reset command (Keyboard.reset() method) is automatically sent to the keyboard.<br>
+   * This method also initializes the PS2Controller to use port 0 only.
    *
    * @param clkGPIO The GPIO number of Clock line
    * @param dataGPIO The GPIO number of Data line
-   * @param generateVirtualKeys If true creates a task which consumes scancodes and produces virtual keys,
-   *                            so you can call KeyboardClass.isVKDown().
+   * @param generateVirtualKeys If true creates a task which consumes scancodes to produce virtual keys,
+   *                            so you can call Keyboard.isVKDown().
    * @param createVKQueue If true creates a task which consunes scancodes and produces virtual keys
-   *                      and put them in a queue, so you can call KeyboardClass.isVKDown(), KeyboardClass.scancodeAvailable()
-   *                      and KeyboardClass.getNextScancode().
+   *                      and put them in a queue, so you can call Keyboard.isVKDown(), Keyboard.virtualKeyAvailable()
+   *                      and Keyboard.getNextVirtualKey().
    *
    * Example:
    *
@@ -373,16 +185,16 @@ public:
   void begin(gpio_num_t clkGPIO, gpio_num_t dataGPIO, bool generateVirtualKeys = true, bool createVKQueue = true);
 
   /**
-   * @brief Initialize KeyboardClass without initializing the PS/2 controller.
+   * @brief Initializes Keyboard without initializing the PS/2 controller.
    *
-   * A reset command (KeyboardClass.reset() method) is automatically sent to the keyboard.<br>
-   * This method does not initialize the PS2ControllerClass.
+   * A reset command (Keyboard.reset() method) is automatically sent to the keyboard.<br>
+   * This method does not initialize the PS2Controller.
    *
    * @param generateVirtualKeys If true creates a task which consumes scancodes and produces virtual keys,
-   *                            so you can call KeyboardClass.isVKDown().
-   * @param createVKQueue If true creates a task which consunes scancodes and produces virtual keys
-   *                      and put them in a queue, so you can call KeyboardClass.isVKDown(), KeyboardClass.scancodeAvailable()
-   *                      and KeyboardClass.getNextScancode().
+   *                            so you can call Keyboard.isVKDown().
+   * @param createVKQueue If true creates a task which consunes scancodes to produce virtual keys
+   *                      and put them in a queue, so you can call Keyboard.isVKDown(), Keyboard.virtualKeyAvailable()
+   *                      and Keyboard.getNextVirtualKey().
    * @param PS2Port The PS/2 port to use (0 or 1).
    *
    * Example:
@@ -394,23 +206,32 @@ public:
   void begin(bool generateVirtualKeys, bool createVKQueue, int PS2Port);
 
   /**
-   * @brief Send a Reset command to the keyboard.
+   * @brief Sets current UI app
+   *
+   * To use this generateVirtualKeys must be true in begin().
+   *
+   * @param app The UI app where to send keyboard events
+   */
+  void setUIApp(uiApp * app) { m_uiApp = app; }
+
+  /**
+   * @brief Sends a Reset command to the keyboard.
    *
    * @return True if the keyboard is correctly initialized.
    */
   bool reset();
 
   /**
-   * @brief Check if keyboard has been detected and correctly initialized.
+   * @brief Checks if keyboard has been detected and correctly initialized.
    *
-   * isKeyboardAvailable() returns a valid value only after KeyboardClass.begin() or KeyboardClass.reset() has been called.
+   * isKeyboardAvailable() returns a valid value only after Keyboard.begin() or Keyboard.reset() has been called.
    *
    * @return True if the keyboard is correctly initialized.
    */
   bool isKeyboardAvailable() { return m_keyboardAvailable; }
 
   /**
-   * @brief Set keyboard layout.
+   * @brief Sets keyboard layout.
    *
    * It is possible to specify an international keyboard layout. The default is US-layout.<br>
    * There are three predefined kayboard layouts: US (USA), UK (United Kingdom), DE (German) and IT (Italian). Other layout can be added
@@ -426,17 +247,17 @@ public:
   void setLayout(KeyboardLayout const * layout);
 
   /**
-   * @brief Get current keyboard layout.
+   * @brief Gets current keyboard layout.
    *
    * @return The default or last set keyboard layout.
    */
   KeyboardLayout const * getLayout() { return m_layout; }
 
   /**
-   * @brief Get the virtual keys status.
+   * @brief Gets the virtual keys status.
    *
    * This method allows to know the status of each virtual key (Down or Up).<br>
-   * Virtual keys are generated from scancodes only if generateVirtualKeys parameter of KeyboardClass.begin() method is true (default).
+   * Virtual keys are generated from scancodes only if generateVirtualKeys parameter of Keyboard.begin() method is true (default).
    *
    * @param virtualKey The Virtual Key to test.
    *
@@ -445,30 +266,35 @@ public:
   bool isVKDown(VirtualKey virtualKey);
 
   /**
-   * @brief Get the number of virtual keys available in the queue.
+   * @brief Gets the number of virtual keys available in the queue.
    *
    * Virtual keys are generated from scancodes only if generateVirtualKeys parameter is true (default)
-   * and createVKQueue parameter is true (default) of KeyboardClass.begin() method.
+   * and createVKQueue parameter is true (default) of Keyboard.begin() method.
    *
    * @return The number of virtual keys available to read.
    */
   int virtualKeyAvailable();
 
   /**
-   * @brief Get a virtual key from the queue.
+   * @brief Gets a virtual key from the queue.
    *
    * Virtual keys are generated from scancodes only if generateVirtualKeys parameter is true (default)
-   * and createVKQueue parameter is true (default) of KeyboardClass.begin() method.
+   * and createVKQueue parameter is true (default) of Keyboard.begin() method.
    *
    * @param keyDown A pointer to boolean variable which will contain if the virtual key is depressed (true) or released (false).
    * @param timeOutMS Timeout in milliseconds. -1 means no timeout (infinite time).
    *
    * @return The first virtual key of the queue (VK_NONE if no data is available in the timeout period).
    */
-  VirtualKey getNextVirtualKey(bool * keyDown = NULL, int timeOutMS = -1);
+  VirtualKey getNextVirtualKey(bool * keyDown = nullptr, int timeOutMS = -1);
 
   /**
-   * @brief Convert virtual key to ASCII.
+   * @brief Empties the virtual keys queue
+   */
+  void emptyVirtualKeyQueue();
+
+  /**
+   * @brief Converts virtual key to ASCII.
    *
    * This method converts the specified virtual key to ASCII, if possible.<br>
    * For example VK_A is converted to 'A' (ASCII 0x41), CTRL  + VK_SPACE produces ASCII NUL (0x00), CTRL + letter produces
@@ -483,22 +309,22 @@ public:
   int virtualKeyToASCII(VirtualKey virtualKey);
 
   /**
-   * @brief Get the number of scancodes available in the queue.
+   * @brief Gets the number of scancodes available in the queue.
    *
    * Scancodes are always generated but they can be consumed by the scancode-to-virtualkeys task. So, in order to use this
-   * method KeyboardClass.begin() method should be called with generateVirtualKeys = false and createVKQueue = false.<br>
-   * Alternatively it is also possible to suspend the conversion task calling KeyboardClass.suspendVirtualKeyGeneration() method.
+   * method Keyboard.begin() method should be called with generateVirtualKeys = false and createVKQueue = false.<br>
+   * Alternatively it is also possible to suspend the conversion task calling Keyboard.suspendVirtualKeyGeneration() method.
    *
    * @return The number of scancodes available to read.
    */
   int scancodeAvailable();
 
   /**
-   * @brief Get a scancode from the queue.
+   * @brief Gets a scancode from the queue.
    *
    * Scancodes are always generated but they can be consumed by the scancode-to-virtualkeys task. So, in order to use this
-   * method KeyboardClass.begin() method should be called with generateVirtualKeys = false and createVKQueue = false.<br>
-   * Alternatively it is also possible to suspend the conversion task calling KeyboardClass.suspendVirtualKeyGeneration() method.
+   * method Keyboard.begin() method should be called with generateVirtualKeys = false and createVKQueue = false.<br>
+   * Alternatively it is also possible to suspend the conversion task calling Keyboard.suspendVirtualKeyGeneration() method.
    *
    * @param timeOutMS Timeout in milliseconds. -1 means no timeout (infinite time).
    * @param requestResendOnTimeOut If true and timeout has expired then asks the keyboard to resend the scancode.
@@ -508,7 +334,7 @@ public:
   int getNextScancode(int timeOutMS = -1, bool requestResendOnTimeOut = false);
 
   /**
-   * @brief Suspend or resume the virtual key generation task.
+   * @brief Suspends or resume the virtual key generation task.
    *
    * Use this method to temporarily suspend the scancode to virtual key conversion task. This is useful when
    * scancode are necessary for a limited time.
@@ -518,7 +344,7 @@ public:
   void suspendVirtualKeyGeneration(bool value);
 
   /**
-   * @brief Set keyboard LEDs status.
+   * @brief Sets keyboard LEDs status.
    *
    * Use this method to switch-on or off the NUMLOCK, CAPSLOCK and SCROLLLOCK LEDs.
    *
@@ -531,7 +357,7 @@ public:
   bool setLEDs(bool numLock, bool capsLock, bool scrollLock) { return send_cmdLEDs(numLock, capsLock, scrollLock); }
 
   /**
-   * @brief Get keyboard LEDs status.
+   * @brief Gets keyboard LEDs status.
    *
    * Use this method to know the current status of NUMLOCK, CAPSLOCK and SCROLLLOCK LEDs.
    *
@@ -542,7 +368,7 @@ public:
   void getLEDs(bool * numLock, bool * capsLock, bool * scrollLock);
 
   /**
-   * @brief Set typematic rate and delay.
+   * @brief Sets typematic rate and delay.
    *
    * If the key is kept pressed down, after repeatDelayMS keyboard starts periodically sending codes with frequency repeatRateMS.
    *
@@ -559,8 +385,8 @@ public:
 
 private:
 
-  VirtualKey scancodeToVK(uint8_t scancode, bool isExtended, KeyboardLayout const * layout = NULL);
-  VirtualKey VKtoAlternateVK(VirtualKey in_vk, KeyboardLayout const * layout = NULL);
+  VirtualKey scancodeToVK(uint8_t scancode, bool isExtended, KeyboardLayout const * layout = nullptr);
+  VirtualKey VKtoAlternateVK(VirtualKey in_vk, KeyboardLayout const * layout = nullptr);
   void updateLEDs();
   VirtualKey blockingGetVirtualKey(bool * keyDown);
   static void SCodeToVKConverterTask(void * pvParameters);
@@ -575,6 +401,8 @@ private:
   uint8_t                   m_VKMap[(int)(VK_LAST + 7) / 8];
 
   KeyboardLayout const *    m_layout;
+
+  uiApp *                   m_uiApp;
 
   bool                      m_CTRL;
   bool                      m_ALT;
@@ -597,7 +425,7 @@ private:
 
 
 
-extern fabgl::KeyboardClass Keyboard;
+
 
 
 

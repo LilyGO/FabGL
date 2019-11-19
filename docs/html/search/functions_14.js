@@ -1,7 +1,9 @@
 var searchData=
 [
-  ['_7ebitmap',['~Bitmap',['../structfabgl_1_1_bitmap.html#a736928e3f1b02440f005a14383254437',1,'fabgl::Bitmap']]],
-  ['_7ecollisiondetector',['~CollisionDetector',['../classfabgl_1_1_collision_detector.html#a715f1a8484b770efdb0ed18986b357a9',1,'fabgl::CollisionDetector']]],
-  ['_7escene',['~Scene',['../classfabgl_1_1_scene.html#a2d48d1aece3c8b745dc566df57a07f21',1,'fabgl::Scene']]],
-  ['_7esprite',['~Sprite',['../structfabgl_1_1_sprite.html#a178bae8eba566938204c809506ccb781',1,'fabgl::Sprite']]]
+  ['virtualkeyavailable',['virtualKeyAvailable',['../classfabgl_1_1_keyboard_class.html#aa93820f1c8f447a37c01376a8d6dbba0',1,'fabgl::KeyboardClass']]],
+  ['virtualkeytoascii',['virtualKeyToASCII',['../classfabgl_1_1_keyboard_class.html#a7fba5778b3518e9aa2d397e0da71520e',1,'fabgl::KeyboardClass']]],
+  ['volume',['volume',['../classfabgl_1_1_waveform_generator.html#aff943804948eae06f7509bf69ef51f05',1,'fabgl::WaveformGenerator::volume()'],['../classfabgl_1_1_sound_generator.html#a3e0020bc8087bd0c889404580859709f',1,'fabgl::SoundGenerator::volume()']]],
+  ['vscrollbarpos',['VScrollBarPos',['../classfabgl_1_1ui_scrollable_control.html#a5288c72bf5acf7bce658ad459197b9d0',1,'fabgl::uiScrollableControl']]],
+  ['vscrollbarrange',['VScrollBarRange',['../classfabgl_1_1ui_scrollable_control.html#a7353297602e112f6334a4614bb361ac0',1,'fabgl::uiScrollableControl']]],
+  ['vscrollbarvisible',['VScrollBarVisible',['../classfabgl_1_1ui_scrollable_control.html#a8249d08c466d64445a108761b5f06a56',1,'fabgl::uiScrollableControl']]]
 ];

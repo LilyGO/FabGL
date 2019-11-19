@@ -25,32 +25,8 @@
 #include "bitmaps.h"
 
 
-/* * * *  C O N F I G U R A T I O N  * * * */
 
-// select one color configuration
-#define USE_8_COLORS  0
-#define USE_64_COLORS 1
-
-// indicate VGA GPIOs to use for selected color configuration
-#if USE_8_COLORS
-  #define VGA_RED    GPIO_NUM_22
-  #define VGA_GREEN  GPIO_NUM_21
-  #define VGA_BLUE   GPIO_NUM_19
-  #define VGA_HSYNC  GPIO_NUM_18
-  #define VGA_VSYNC  GPIO_NUM_5
-#elif USE_64_COLORS
-  #define VGA_RED1   GPIO_NUM_22
-  #define VGA_RED0   GPIO_NUM_21
-  #define VGA_GREEN1 GPIO_NUM_19
-  #define VGA_GREEN0 GPIO_NUM_18
-  #define VGA_BLUE1  GPIO_NUM_5
-  #define VGA_BLUE0  GPIO_NUM_4
-  #define VGA_HSYNC  GPIO_NUM_23
-  #define VGA_VSYNC  GPIO_NUM_15
-#endif
-
-/* * * *  E N D   O F   C O N F I G U R A T I O N  * * * */
-
+fabgl::VGAController VGAController;
 
 
 #define SPACESHIP_COUNT 10
@@ -72,7 +48,7 @@ struct MyScene : public Scene {
   MySprite objects_[OBJECTS_COUNT];
 
   MyScene()
-    : Scene(OBJECTS_COUNT)
+    : Scene(OBJECTS_COUNT, 20, VGAController.getViewPortWidth(), VGAController.getViewPortHeight())
   {
   }
 
@@ -128,7 +104,7 @@ struct MyScene : public Scene {
       if (sprite->isAlive) {
 
         // this object is alive, move to the next position
-        sprite->move(sprite->velX, sprite->velY);
+        sprite->moveBy(sprite->velX, sprite->velY, VGAController.getViewPortWidth(), VGAController.getViewPortHeight());
 
         // update the collision detector and check for a possible collision
         updateSpriteAndDetectCollisions(sprite);
@@ -145,7 +121,7 @@ struct MyScene : public Scene {
 
     // move Jupiter every 20 updates
     if ((updateCount % 20) == 0)
-      objects_[0].move(1, 0);
+      objects_[0].moveBy(1, 0, VGAController.getViewPortWidth(), VGAController.getViewPortHeight());
 
     VGAController.refreshSprites();
   }
@@ -172,21 +148,22 @@ struct MyScene : public Scene {
 
   void paintSpace()
   {
-    Canvas.setBrushColor(Color::Black);
-    Canvas.clear();
-    Canvas.setPenColor(Color::White);
-    Canvas.setBrushColor(Color::White);
+    Canvas cv(&VGAController);
+    cv.setBrushColor(Color::Black);
+    cv.clear();
+    cv.setPenColor(Color::White);
+    cv.setBrushColor(Color::White);
     // far stars
-    Canvas.setPenColor(1, 1, 1);
+    cv.setPenColor(1, 1, 1);
     for (int i = 0; i < 400; ++i)
-      Canvas.setPixel(random(getWidth()), random(getHeight()));
+      cv.setPixel(random(getWidth()), random(getHeight()));
     // near stars
-    Canvas.setPenColor(2, 2, 2);
+    cv.setPenColor(2, 2, 2);
     for (int i = 0; i < 50; ++i)
-      Canvas.setPixel(random(getWidth()), random(getHeight()));
+      cv.setPixel(random(getWidth()), random(getHeight()));
     // galaxy
-    Canvas.drawBitmap(80, 35, &galaxy);
-    Canvas.drawBitmap(220, 130, &galaxy);
+    cv.drawBitmap(80, 35, &galaxy);
+    cv.drawBitmap(220, 130, &galaxy);
   }
 
 };
@@ -197,12 +174,7 @@ void setup()
   // just for debug
   Serial.begin(115200);
 
-  #if USE_8_COLORS
-  VGAController.begin(VGA_RED, VGA_GREEN, VGA_BLUE, VGA_HSYNC, VGA_VSYNC);
-  #elif USE_64_COLORS
-  VGAController.begin(VGA_RED1, VGA_RED0, VGA_GREEN1, VGA_GREEN0, VGA_BLUE1, VGA_BLUE0, VGA_HSYNC, VGA_VSYNC);
-  #endif
-
+  VGAController.begin();
   VGAController.setResolution(VGA_320x200_75Hz);
   //VGAController.moveScreen(20, 0);
   VGAController.moveScreen(-8, 0);
@@ -213,5 +185,5 @@ void loop()
 {
   MyScene scene;
   scene.start();
-  vTaskSuspend(NULL);
+  vTaskSuspend(nullptr);
 }

@@ -27,47 +27,13 @@
 
 
 
-/* * * *  C O N F I G U R A T I O N  * * * */
-
-// select one color configuration
-#define USE_8_COLORS  0
-#define USE_64_COLORS 1
-
-// indicate VGA GPIOs to use for selected color configuration
-#if USE_8_COLORS
-  #define VGA_RED    GPIO_NUM_22
-  #define VGA_GREEN  GPIO_NUM_21
-  #define VGA_BLUE   GPIO_NUM_19
-  #define VGA_HSYNC  GPIO_NUM_18
-  #define VGA_VSYNC  GPIO_NUM_5
-#elif USE_64_COLORS
-  #define VGA_RED1   GPIO_NUM_22
-  #define VGA_RED0   GPIO_NUM_21
-  #define VGA_GREEN1 GPIO_NUM_19
-  #define VGA_GREEN0 GPIO_NUM_18
-  #define VGA_BLUE1  GPIO_NUM_5
-  #define VGA_BLUE0  GPIO_NUM_4
-  #define VGA_HSYNC  GPIO_NUM_23
-  #define VGA_VSYNC  GPIO_NUM_15
-#endif
-
-// select one Keyboard and Mouse configuration
-#define KEYBOARD_ON_PORT0                0
-#define MOUSE_ON_PORT0                   0
-#define KEYBOARD_ON_PORT0_MOUSE_ON_PORT1 1
-
-// indicate PS/2 GPIOs for each port
-#define PS2_PORT0_CLK GPIO_NUM_33
-#define PS2_PORT0_DAT GPIO_NUM_32
-#define PS2_PORT1_CLK GPIO_NUM_26
-#define PS2_PORT1_DAT GPIO_NUM_27
-
-/* * * *  E N D   O F   C O N F I G U R A T I O N  * * * */
-
-
 
 using fabgl::iclamp;
 
+
+fabgl::VGAController VGAController;
+fabgl::Canvas        canvas(&VGAController);
+fabgl::PS2Controller PS2Controller;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,33 +53,33 @@ struct IntroScene : public Scene {
   int starting_ = 0;
 
   IntroScene()
-    : Scene(0)
+    : Scene(0, 20, VGAController.getViewPortWidth(), VGAController.getViewPortHeight())
   {
   }
 
   void init()
   {
-    Canvas.setBrushColor(Color::Black);
-    Canvas.clear();
-    Canvas.setGlyphOptions(GlyphOptions().FillBackground(true));
-    Canvas.selectFont(Canvas.getPresetFontInfo(40, 14));
-    Canvas.setPenColor(Color::BrightWhite);
-    Canvas.setGlyphOptions(GlyphOptions().DoubleWidth(1));
-    Canvas.drawText(50, 15, "SPACE INVADERS");
-    Canvas.setGlyphOptions(GlyphOptions().DoubleWidth(0));
+    canvas.setBrushColor(Color::Black);
+    canvas.clear();
+    canvas.setGlyphOptions(GlyphOptions().FillBackground(true));
+    canvas.selectFont(canvas.getPresetFontInfo(40, 14));
+    canvas.setPenColor(Color::BrightWhite);
+    canvas.setGlyphOptions(GlyphOptions().DoubleWidth(1));
+    canvas.drawText(50, 15, "SPACE INVADERS");
+    canvas.setGlyphOptions(GlyphOptions().DoubleWidth(0));
 
-    Canvas.setPenColor(Color::Green);
-    Canvas.drawText(10, 40, "ESP32 version by Fabrizio Di Vittorio");
-    Canvas.drawText(105, 55, "www.fabgl.com");
+    canvas.setPenColor(Color::Green);
+    canvas.drawText(10, 40, "ESP32 version by Fabrizio Di Vittorio");
+    canvas.drawText(105, 55, "www.fabgl.com");
 
-    Canvas.setPenColor(Color::Yellow);
-    Canvas.drawText(72, 97, "* SCORE ADVANCE TABLE *");
-    Canvas.drawBitmap(TEXT_X - 20 - 2, TEXT_Y, &bmpEnemyD);
-    Canvas.drawBitmap(TEXT_X - 20, TEXT_Y + 15, &bmpEnemyA[0]);
-    Canvas.drawBitmap(TEXT_X - 20, TEXT_Y + 30, &bmpEnemyB[0]);
-    Canvas.drawBitmap(TEXT_X - 20, TEXT_Y + 45, &bmpEnemyC[0]);
+    canvas.setPenColor(Color::Yellow);
+    canvas.drawText(72, 97, "* SCORE ADVANCE TABLE *");
+    canvas.drawBitmap(TEXT_X - 20 - 2, TEXT_Y, &bmpEnemyD);
+    canvas.drawBitmap(TEXT_X - 20, TEXT_Y + 15, &bmpEnemyA[0]);
+    canvas.drawBitmap(TEXT_X - 20, TEXT_Y + 30, &bmpEnemyB[0]);
+    canvas.drawBitmap(TEXT_X - 20, TEXT_Y + 45, &bmpEnemyC[0]);
 
-    Canvas.setBrushColor(Color::Black);
+    canvas.setBrushColor(Color::Black);
 
     controller_ = 0;
   }
@@ -122,20 +88,23 @@ struct IntroScene : public Scene {
   {
     static const char * scoreText[] = {"= ? MISTERY", "= 30 POINTS", "= 20 POINTS", "= 10 POINTS" };
 
+    auto keyboard = PS2Controller.keyboard();
+    auto mouse    = PS2Controller.mouse();
+
     if (starting_) {
 
       if (starting_ > 50)
         stop();
 
       ++starting_;
-      Canvas.scroll(0, -5);
+      canvas.scroll(0, -5);
 
     } else {
       if (updateCount > 30 && updateCount % 5 == 0 && textRow_ < 4) {
-        int x = TEXT_X + textCol_ * Canvas.getFontInfo()->width;
+        int x = TEXT_X + textCol_ * canvas.getFontInfo()->width;
         int y = TEXT_Y + textRow_ * 15 - 4;
-        Canvas.setPenColor(Color::White);
-        Canvas.drawChar(x, y, scoreText[textRow_][textCol_]);
+        canvas.setPenColor(Color::White);
+        canvas.drawChar(x, y, scoreText[textRow_][textCol_]);
         ++textCol_;
         if (scoreText[textRow_][textCol_] == 0) {
           textCol_ = 0;
@@ -144,20 +113,20 @@ struct IntroScene : public Scene {
       }
 
       if (updateCount % 20 == 0) {
-        Canvas.setPenColor(random(4), random(4), random(4));
-        if (Keyboard.isKeyboardAvailable() && Mouse.isMouseAvailable())
-          Canvas.drawText(45, 75, "Press [SPACE] or CLICK to Play");
-        else if (Keyboard.isKeyboardAvailable())
-          Canvas.drawText(80, 75, "Press [SPACE] to Play");
-        else if (Mouse.isMouseAvailable())
-          Canvas.drawText(105, 75, "Click to Play");
+        canvas.setPenColor(random(256), random(256), random(256));
+        if (keyboard->isKeyboardAvailable() && mouse->isMouseAvailable())
+          canvas.drawText(45, 75, "Press [SPACE] or CLICK to Play");
+        else if (keyboard->isKeyboardAvailable())
+          canvas.drawText(80, 75, "Press [SPACE] to Play");
+        else if (mouse->isMouseAvailable())
+          canvas.drawText(105, 75, "Click to Play");
       }
 
       // handle keyboard or mouse (after two seconds)
       if (updateCount > 50) {
-        if (Keyboard.isKeyboardAvailable() && Keyboard.isVKDown(fabgl::VK_SPACE))
+        if (keyboard->isKeyboardAvailable() && keyboard->isVKDown(fabgl::VK_SPACE))
           controller_ = 1;  // select keyboard as controller
-        else if (Mouse.isMouseAvailable() && Mouse.getNextDelta(NULL, 0) && Mouse.status().buttons.left)
+        else if (mouse->isMouseAvailable() && mouse->getNextDelta(nullptr, 0) && mouse->status().buttons.left)
           controller_ = 2;  // select mouse as controller
         starting_ = (controller_ > 0);  // start only when a controller has been selected
       }
@@ -231,19 +200,19 @@ struct GameScene : public Scene {
   int enemiesY_            = ENEMIES_START_Y;
   int enemiesDir_          = 1;
   int enemiesAlive_        = ROWENEMIESCOUNT * 5;
-  SISprite * lastHitEnemy_ = NULL;
+  SISprite * lastHitEnemy_ = nullptr;
   GameState gameState_     = GAMESTATE_PLAYING;
 
   bool updateScore_        = true;
   int64_t pauseStart_;
 
-  Bitmap bmpShield[4] = { Bitmap(22, 16, shield_data, 1, RGB(0, 3, 0), true),
-                          Bitmap(22, 16, shield_data, 1, RGB(0, 3, 0), true),
-                          Bitmap(22, 16, shield_data, 1, RGB(0, 3, 0), true),
-                          Bitmap(22, 16, shield_data, 1, RGB(0, 3, 0), true), };
+  Bitmap bmpShield[4] = { Bitmap(22, 16, shield_data, PixelFormat::Mask, RGB888(0, 255, 0), true),
+                          Bitmap(22, 16, shield_data, PixelFormat::Mask, RGB888(0, 255, 0), true),
+                          Bitmap(22, 16, shield_data, PixelFormat::Mask, RGB888(0, 255, 0), true),
+                          Bitmap(22, 16, shield_data, PixelFormat::Mask, RGB888(0, 255, 0), true), };
 
   GameScene()
-    : Scene(SPRITESCOUNT)
+    : Scene(SPRITESCOUNT, 20, VGAController.getViewPortWidth(), VGAController.getViewPortHeight())
   {
   }
 
@@ -303,31 +272,32 @@ struct GameScene : public Scene {
 
     VGAController.setSprites(sprites_, SPRITESCOUNT);
 
-    Canvas.setBrushColor(Color::Black);
-    Canvas.clear();
+    canvas.setBrushColor(Color::Black);
+    canvas.clear();
 
-    Canvas.setPenColor(Color::Green);
-    Canvas.drawLine(0, 180, 320, 180);
+    canvas.setPenColor(Color::Green);
+    canvas.drawLine(0, 180, 320, 180);
 
-    //Canvas.setPenColor(Color::Yellow);
-    //Canvas.drawRectangle(0, 0, getWidth() - 1, getHeight() - 1);
+    //canvas.setPenColor(Color::Yellow);
+    //canvas.drawRectangle(0, 0, getWidth() - 1, getHeight() - 1);
 
-    Canvas.setGlyphOptions(GlyphOptions().FillBackground(true));
-    Canvas.selectFont(Canvas.getPresetFontInfo(80, 33));
-    Canvas.setPenColor(Color::White);
-    Canvas.drawText(125, 20, "WE COME IN PEACE");
-    Canvas.selectFont(Canvas.getPresetFontInfo(40, 14));
-    Canvas.setPenColor(0, 3, 3);
-    Canvas.drawText(2, 2, "SCORE");
-    Canvas.setPenColor(0, 0, 3);
-    Canvas.drawText(254, 2, "HI-SCORE");
-    Canvas.setPenColor(3, 3, 3);
-    Canvas.drawTextFmt(254, 181, "Level %02d", level_);
+    canvas.setGlyphOptions(GlyphOptions().FillBackground(true));
+    canvas.selectFont(canvas.getPresetFontInfo(80, 33));
+    canvas.setPenColor(Color::White);
+    canvas.drawText(125, 20, "WE COME IN PEACE");
+    canvas.selectFont(canvas.getPresetFontInfo(40, 14));
+    canvas.setPenColor(0, 3, 3);
+    canvas.drawText(2, 2, "SCORE");
+    canvas.setPenColor(0, 0, 3);
+    canvas.drawText(254, 2, "HI-SCORE");
+    canvas.setPenColor(3, 3, 3);
+    canvas.drawTextFmt(254, 181, "Level %02d", level_);
 
     if (IntroScene::controller_ == 2) {
       // setup mouse controller
-      Mouse.setSampleRate(40);  // reduce number of samples from mouse to reduce delays
-      Mouse.setupAbsolutePositioner(getWidth() - player_->getWidth(), 0, false, false, NULL); // take advantage of mouse acceleration
+      auto mouse = PS2Controller.mouse();
+      mouse->setSampleRate(40);  // reduce number of samples from mouse to reduce delays
+      mouse->setupAbsolutePositioner(getWidth() - player_->getWidth(), 0, false); // take advantage of mouse acceleration
     }
 
     showLives();
@@ -335,12 +305,12 @@ struct GameScene : public Scene {
 
   void drawScore()
   {
-    Canvas.setPenColor(3, 3, 3);
-    Canvas.drawTextFmt(2, 14, "%05d", score_);
+    canvas.setPenColor(3, 3, 3);
+    canvas.drawTextFmt(2, 14, "%05d", score_);
     if (score_ > hiScore_)
       hiScore_ = score_;
-    Canvas.setPenColor(3, 3, 3);
-    Canvas.drawTextFmt(266, 14, "%05d", hiScore_);
+    canvas.setPenColor(3, 3, 3);
+    canvas.drawTextFmt(266, 14, "%05d", hiScore_);
   }
 
   void moveEnemy(SISprite * enemy, int x, int y)
@@ -362,19 +332,19 @@ struct GameScene : public Scene {
     for (int i = 0; i < ROWENEMIESCOUNT * 5; ++i)
       enemies_[i].allowDraw = false;
     // show game over
-    Canvas.setPenColor(0, 3, 0);
-    Canvas.setBrushColor(0, 0, 0);
-    Canvas.fillRectangle(80, 60, 240, 130);
-    Canvas.drawRectangle(80, 60, 240, 130);
-    Canvas.setGlyphOptions(GlyphOptions().DoubleWidth(1));
-    Canvas.setPenColor(3, 3, 3);
-    Canvas.drawText(90, 80, "GAME OVER");
-    Canvas.setGlyphOptions(GlyphOptions().DoubleWidth(0));
-    Canvas.setPenColor(0, 3, 0);
+    canvas.setPenColor(0, 3, 0);
+    canvas.setBrushColor(0, 0, 0);
+    canvas.fillRectangle(80, 60, 240, 130);
+    canvas.drawRectangle(80, 60, 240, 130);
+    canvas.setGlyphOptions(GlyphOptions().DoubleWidth(1));
+    canvas.setPenColor(3, 3, 3);
+    canvas.drawText(90, 80, "GAME OVER");
+    canvas.setGlyphOptions(GlyphOptions().DoubleWidth(0));
+    canvas.setPenColor(0, 3, 0);
     if (IntroScene::controller_ == 1)
-      Canvas.drawText(110, 100, "Press [SPACE]");
+      canvas.drawText(110, 100, "Press [SPACE]");
     else if (IntroScene::controller_ == 2)
-      Canvas.drawText(93, 100, "Click to continue");
+      canvas.drawText(93, 100, "Click to continue");
     // change state
     gameState_ = GAMESTATE_GAMEOVER;
     level_ = 1;
@@ -386,11 +356,11 @@ struct GameScene : public Scene {
   {
     ++level_;
     // show game over
-    Canvas.setPenColor(0, 3, 0);
-    Canvas.drawRectangle(80, 80, 240, 110);
-    Canvas.setGlyphOptions(GlyphOptions().DoubleWidth(1));
-    Canvas.drawTextFmt(105, 88, "LEVEL %d", level_);
-    Canvas.setGlyphOptions(GlyphOptions().DoubleWidth(0));
+    canvas.setPenColor(0, 3, 0);
+    canvas.drawRectangle(80, 80, 240, 110);
+    canvas.setGlyphOptions(GlyphOptions().DoubleWidth(1));
+    canvas.drawTextFmt(105, 88, "LEVEL %d", level_);
+    canvas.setGlyphOptions(GlyphOptions().DoubleWidth(0));
     // change state
     gameState_  = GAMESTATE_LEVELCHANGED;
     pauseStart_ = esp_timer_get_time();
@@ -398,6 +368,9 @@ struct GameScene : public Scene {
 
   void update(int updateCount)
   {
+    auto keyboard = PS2Controller.keyboard();
+    auto mouse    = PS2Controller.mouse();
+
     if (updateScore_) {
       updateScore_ = false;
       drawScore();
@@ -410,7 +383,7 @@ struct GameScene : public Scene {
         // handle enemy explosion
         if (lastHitEnemy_) {
           lastHitEnemy_->visible = false;
-          lastHitEnemy_ = NULL;
+          lastHitEnemy_ = nullptr;
         }
         // handle enemies movement
         enemiesX_ += enemiesDir_ * ENEMIES_STEP_X;
@@ -508,21 +481,21 @@ struct GameScene : public Scene {
       // handle fire and movement from controller
       if (IntroScene::controller_ == 1) {
         // KEYBOARD controller
-        if (Keyboard.isVKDown(fabgl::VK_LEFT))
+        if (keyboard->isVKDown(fabgl::VK_LEFT))
           playerVelX_ = -1;
-        else if (Keyboard.isVKDown(fabgl::VK_RIGHT))
+        else if (keyboard->isVKDown(fabgl::VK_RIGHT))
           playerVelX_ = +1;
         else
           playerVelX_ = 0;
-        if (Keyboard.isVKDown(fabgl::VK_SPACE) && !playerFire_->visible)  // fire?
+        if (keyboard->isVKDown(fabgl::VK_SPACE) && !playerFire_->visible)  // fire?
           playerFire_->moveTo(player_->x + 7, player_->y - 1)->visible = true;
       } else if (IntroScene::controller_ == 2) {
         // MOUSE controller
-        if (Mouse.deltaAvailable()) {
+        if (mouse->deltaAvailable()) {
           MouseDelta delta;
-          Mouse.getNextDelta(&delta);
-          Mouse.updateAbsolutePosition(&delta);
-          playerAbsX_ = Mouse.status().X;
+          mouse->getNextDelta(&delta);
+          mouse->updateAbsolutePosition(&delta);
+          playerAbsX_ = mouse->status().X;
           if (delta.buttons.left && !playerFire_->visible)    // fire?
             playerFire_->moveTo(player_->x + 7, player_->y - 1)->visible = true;
         }
@@ -535,8 +508,10 @@ struct GameScene : public Scene {
     if (gameState_ == GAMESTATE_LEVELCHANGING)
       levelChange();
 
-    if (gameState_ == GAMESTATE_LEVELCHANGED && esp_timer_get_time() >= pauseStart_ + 2500000)
+    if (gameState_ == GAMESTATE_LEVELCHANGED && esp_timer_get_time() >= pauseStart_ + 2500000) {
       stop(); // restart from next level
+      VGAController.removeSprites();
+    }
 
     if (gameState_ == GAMESTATE_GAMEOVER) {
 
@@ -544,10 +519,12 @@ struct GameScene : public Scene {
       if ((updateCount % 20) == 0)
         player_->setFrame( player_->getFrameIndex() == 1 ? 2 : 1);
 
-      // wait for SPACE or click from controller
-      if ((IntroScene::controller_ == 1 && Keyboard.isVKDown(fabgl::VK_SPACE)) ||
-          (IntroScene::controller_ == 2 && Mouse.getNextDelta(NULL, 0) && Mouse.status().buttons.left))
+      // wait for SPACE or click from mouse
+      if ((IntroScene::controller_ == 1 && keyboard->isVKDown(fabgl::VK_SPACE)) ||
+          (IntroScene::controller_ == 2 && mouse->getNextDelta(nullptr, 0) && mouse->status().buttons.left)) {
         stop();
+        VGAController.removeSprites();
+      }
 
     }
 
@@ -556,23 +533,24 @@ struct GameScene : public Scene {
 
   void damageShield(SISprite * shield, Point collisionPoint)
   {
-    uint8_t * data = (uint8_t*) shield->getFrame()->data;
+    Bitmap * shieldBitmap = shield->getFrame();
     int x = collisionPoint.X - shield->x;
     int y = collisionPoint.Y - shield->y;
-    for (int i = 0; i < 64; ++i) {
+    shieldBitmap->setPixel(x, y, 0);
+    for (int i = 0; i < 32; ++i) {
       int px = iclamp(x + random(-4, 5), 0, shield->getWidth() - 1);
       int py = iclamp(y + random(-4, 5), 0, shield->getHeight() - 1);
-      *(data + px + shield->getWidth() * py) = 0;
+      shieldBitmap->setPixel(px, py, 0);
     }
   }
 
   void showLives()
   {
-    Canvas.fillRectangle(1, 181, 100, 195);
-    Canvas.setPenColor(Color::White);
-    Canvas.drawTextFmt(5, 181, "%d", lives_);
+    canvas.fillRectangle(1, 181, 100, 195);
+    canvas.setPenColor(Color::White);
+    canvas.drawTextFmt(5, 181, "%d", lives_);
     for (int i = 0; i < lives_; ++i)
-      Canvas.drawBitmap(15 + i * (bmpPlayer.width + 5), 183, &bmpPlayer);
+      canvas.drawBitmap(15 + i * (bmpPlayer.width + 5), 183, &bmpPlayer);
   }
 
   void collisionDetected(Sprite * spriteA, Sprite * spriteB, Point collisionPoint)
@@ -628,25 +606,9 @@ int GameScene::score_   = 0;
 
 void setup()
 {
-  #if KEYBOARD_ON_PORT0_MOUSE_ON_PORT1
-  // both keyboard (port 0) and mouse configured (port 1)
-  PS2Controller.begin(PS2_PORT0_CLK, PS2_PORT0_DAT, PS2_PORT1_CLK, PS2_PORT1_DAT);
-  Keyboard.begin(true, false, 0);
-  Mouse.begin(1);
-  #elif KEYBOARD_ON_PORT0
-  // only keyboard configured on port 0
-  Keyboard.begin(PS2_PORT0_CLK, PS2_PORT0_DAT, true, false);
-  #elif MOUSE_ON_PORT0
-  // only mouse configured on port 0
-  Mouse.begin(PS2_PORT0_CLK, PS2_PORT0_DAT);
-  #endif
+  PS2Controller.begin(PS2Preset::KeyboardPort0_MousePort1, KbdMode::GenerateVirtualKeys);
 
-  #if USE_8_COLORS
-  VGAController.begin(VGA_RED, VGA_GREEN, VGA_BLUE, VGA_HSYNC, VGA_VSYNC);
-  #elif USE_64_COLORS
-  VGAController.begin(VGA_RED1, VGA_RED0, VGA_GREEN1, VGA_GREEN0, VGA_BLUE1, VGA_BLUE0, VGA_HSYNC, VGA_VSYNC);
-  #endif
-
+  VGAController.begin();
   VGAController.setResolution(VGA_320x200_75Hz);
 
   // adjust this to center screen in your monitor

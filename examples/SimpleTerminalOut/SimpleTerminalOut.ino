@@ -26,54 +26,22 @@
 
 
 
-/* * * *  C O N F I G U R A T I O N  * * * */
-
-// select one color configuration
-#define USE_8_COLORS  0
-#define USE_64_COLORS 1
-
-// indicate VGA GPIOs to use for selected color configuration
-#if USE_8_COLORS
-  #define VGA_RED    GPIO_NUM_22
-  #define VGA_GREEN  GPIO_NUM_21
-  #define VGA_BLUE   GPIO_NUM_19
-  #define VGA_HSYNC  GPIO_NUM_18
-  #define VGA_VSYNC  GPIO_NUM_5
-#elif USE_64_COLORS
-  #define VGA_RED1   GPIO_NUM_22
-  #define VGA_RED0   GPIO_NUM_21
-  #define VGA_GREEN1 GPIO_NUM_19
-  #define VGA_GREEN0 GPIO_NUM_18
-  #define VGA_BLUE1  GPIO_NUM_5
-  #define VGA_BLUE0  GPIO_NUM_4
-  #define VGA_HSYNC  GPIO_NUM_23
-  #define VGA_VSYNC  GPIO_NUM_15
-#endif
-
-/* * * *  E N D   O F   C O N F I G U R A T I O N  * * * */
-
-
-
-TerminalClass Terminal;
+fabgl::VGAController VGAController;
+fabgl::Terminal      Terminal;
 
 
 void setup()
 {
   Serial.begin(115200); delay(500); Serial.write("\n\n\n"); // DEBUG ONLY
 
-  #if USE_8_COLORS
-  VGAController.begin(VGA_RED, VGA_GREEN, VGA_BLUE, VGA_HSYNC, VGA_VSYNC);
-  #elif USE_64_COLORS
-  VGAController.begin(VGA_RED1, VGA_RED0, VGA_GREEN1, VGA_GREEN0, VGA_BLUE1, VGA_BLUE0, VGA_HSYNC, VGA_VSYNC);
-  #endif
-
+  VGAController.begin();
   VGAController.setResolution(VGA_640x350_70HzAlt1, 640, 350);
   //VGAController.setResolution(VGA_640x240_60Hz);    // select to have more free memory
 
   // this speed-up display but may generate flickering
   VGAController.enableBackgroundPrimitiveExecution(false);
 
-  Terminal.begin();
+  Terminal.begin(&VGAController);
   Terminal.setLogStream(Serial);  // DEBUG ONLY
 
   Terminal.enableCursor(true);
@@ -84,7 +52,7 @@ void slowPrintf(const char * format, ...)
 {
   va_list ap;
   va_start(ap, format);
-  int size = vsnprintf(NULL, 0, format, ap) + 1;
+  int size = vsnprintf(nullptr, 0, format, ap) + 1;
   if (size > 0) {
     char buf[size + 1];
     vsnprintf(buf, size, format, ap);
@@ -172,33 +140,34 @@ void demo3()
 
 void demo4()
 {
+  Canvas cv(&VGAController);
   Terminal.write("\e[40;32m"); // background: black, foreground: green
   slowPrintf("\nMixed text and graphics:\r\n");
   slowPrintf("Points...\r\n");
   for (int i = 0; i < 500; ++i) {
-    Canvas.setPenColor(random(4), random(4), random(4));
-    Canvas.setPixel(random(640), random(350));
+    cv.setPenColor(random(256), random(256), random(256));
+    cv.setPixel(random(cv.getWidth()), random(cv.getHeight()));
     delay(15);
   }
   delay(500);
   slowPrintf("\e[40;32mLines...\r\n");
   for (int i = 0; i < 50; ++i) {
-    Canvas.setPenColor(random(4), random(4), random(4));
-    Canvas.drawLine(random(640), random(350), random(640), random(350));
+    cv.setPenColor(random(256), random(256), random(256));
+    cv.drawLine(random(cv.getWidth()), random(cv.getHeight()), random(cv.getWidth()), random(cv.getHeight()));
     delay(50);
   }
   delay(500);
   slowPrintf("\e[40;32mRectangles...\r\n");
   for (int i = 0; i < 50; ++i) {
-    Canvas.setPenColor(random(4), random(4), random(4));
-    Canvas.drawRectangle(random(640), random(350), random(640), random(350));
+    cv.setPenColor(random(256), random(256), random(256));
+    cv.drawRectangle(random(cv.getWidth()), random(cv.getHeight()), random(cv.getWidth()), random(cv.getHeight()));
     delay(50);
   }
   delay(500);
   slowPrintf("\e[40;32mEllipses...\r\n");
   for (int i = 0; i < 50; ++i) {
-    Canvas.setPenColor(random(4), random(4), random(4));
-    Canvas.drawEllipse(random(640), random(350), random(640), random(350));
+    cv.setPenColor(random(256), random(256), random(256));
+    cv.drawEllipse(random(cv.getWidth()), random(cv.getHeight()), random(cv.getWidth()), random(cv.getHeight()));
     delay(50);
   }
   for (int i = 0; i < 30; ++i) {

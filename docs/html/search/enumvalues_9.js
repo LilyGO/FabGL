@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['sync',['Sync',['../vgacontroller_8h.html#ac9fa12697d1785c744af01bb0800d652a3883a8f6a8d0924e5083674b04d162e1',1,'fabgl']]]
+  ['legacymouse',['LegacyMouse',['../group___enumerations.html#ggaa42dc1b02d34a4a2a3a831fcf3b5ba2ca8b9e989ac39c6cc9923d407899c870d5',1,'fabgl']]]
 ];

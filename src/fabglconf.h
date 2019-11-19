@@ -67,19 +67,19 @@
 #define FABGLIB_CHARS_CONSUMER_TASK_PRIORITY 5
 
 
-/** Stack size of the task that reads keys from keyboard and send ANSI/VT codes to output stream in TerminalClass */
+/** Stack size of the task that reads keys from keyboard and send ANSI/VT codes to output stream in Terminal */
 #define FABGLIB_KEYBOARD_READER_TASK_STACK_SIZE 2048
 
 
-/** Priority of the task that reads keys from keyboard and send ANSI/VT codes to output stream in TerminalClass */
+/** Priority of the task that reads keys from keyboard and send ANSI/VT codes to output stream in Terminal */
 #define FABGLIB_KEYBOARD_READER_TASK_PRIORITY 5
 
 
-/** Stack size of the task that converts scancodes to virtualkeys KeyboardClass */
+/** Stack size of the task that converts scancodes to virtualkeys Keyboard */
 #define FABGLIB_SCODETOVK_TASK_STACK_SIZE 800
 
 
-/** Priority of the task that converts scancodes to virtualkeys KeyboardClass */
+/** Priority of the task that converts scancodes to virtualkeys Keyboard */
 #define FABGLIB_SCODETOVK_TASK_PRIORITY 5
 
 
@@ -87,15 +87,11 @@
 #define FABGLIB_UNDERLINE_POSITION 0
 
 
-/** Optional feature. Enables invertRectangle() method in VGA Canvas. */
-#define FABGLIB_HAS_INVERTRECT 0
-
-
 /** Optional feature. If enabled terminal fonts are cached in RAM for better performance. */
 #define FABGLIB_CACHE_FONT_IN_RAM 0
 
 
-/** Optional feature. Enables KeyboardClass.virtualKeyToString() method */
+/** Optional feature. Enables Keyboard.virtualKeyToString() method */
 #define FABGLIB_HAS_VirtualKeyO_STRING 1
 
 
@@ -139,6 +135,12 @@
 
 /************ Preset Resolution Modelines ************/
 
+/** Modeline for 256x192@50Hz resolution - requires an upscaler*/
+#define VGA_256x192_50Hz "\"256x192@50\" 8.13 256 288 296 328 192 196 198 202 -HSync -VSync DoubleScan"
+
+/** Modeline for 256x384@60Hz resolution */
+#define VGA_256x384_60Hz "\"256x384@60\" 17.09 256 272 304 352 384 387 391 404 -HSync -VSync DoubleScan FrontPorchBegins"
+
 /** Modeline for 320x200@75Hz resolution */
 #define VGA_320x200_75Hz "\"320x200@75Hz\" 12.93 320 352 376 408 200 208 211 229 -HSync -VSync DoubleScan"
 
@@ -154,6 +156,9 @@
 /** Modeline for 480x300@75Hz resolution */
 #define VGA_480x300_75Hz "\"480x300@75Hz\" 31.22 480 504 584 624 300 319 322 333 -HSync -VSync DoubleScan"
 
+/** Modeline for 512x192@60Hz resolution */
+#define VGA_512x192_60Hz "\"512x192@60Hz\" 32.5 512 524 592 672 192 193 194 202 -HSync -VSync QuadScan"
+
 /** Modeline for 512x384@60Hz resolution */
 #define VGA_512x384_60Hz "\"512x384@60Hz\" 32.5 512 524 592 672 384 385 388 403 -HSync -VSync DoubleScan"
 
@@ -164,7 +169,10 @@
 #define VGA_512x512_58Hz "\"512x512@58Hz\" 21.21 512 538 594 668 512 513 516 545 -HSync -VSync"
 
 /** Modeline for 640x200@70Hz resolution */
-#define VGA_640x200_70Hz "\"640x200@70Hz\" 25.175 640 656 752 800 200 208 211 226 -HSync -VSync DoubleScan"
+#define VGA_640x200_70Hz "\"640x200@70Hz\" 25.175 640 663 759 808 200 208 211 226 -HSync -VSync DoubleScan"
+
+/** Modeline for 640x200@70Hz retro resolution */
+#define VGA_640x200_70HzRetro "\"640x200@70Hz\" 25.175 640 663 759 808 200 208 211 226 -HSync -VSync DoubleScan MultiScanBlank"
 
 /** Modeline for 640x240@60Hz (DoubleScan) resolution */
 #define VGA_640x240_60Hz "\"640x240@60Hz\" 25.175 640 656 752 800 240 245 247 262 -HSync -VSync DoubleScan"
@@ -221,5 +229,11 @@
 #define SVGA_800x600_60Hz "\"800x600@60Hz\" 40 800 840 968 1056 600 601 605 628 -HSync -VSync"
 
 
+// Thanks to Paul Rickards (http://biosrhythm.com)
+
+#define NTSC_640x240_60hz "\"NTSC 640x240 (60Hz)\" 12.312 640 662 719 784 240 244 247 262 -hsync -vsync"
+#define NTSC_720x240_60hz "\"NTSC 720x240 (60Hz)\" 13.820 720 744 809 880 240 244 247 262 -hsync -vsync"
+#define PAL_720x288_50hz "\"PAL  720x288 (50Hz)\" 13.853 720 741 806 888 288 290 293 312 -hsync -vsync"
+#define PAL_768x288_50hz "\"PAL  768x288 (50Hz)\" 14.726 768 790 859 944 288 290 293 312 -hsync -vsync"
 
 
