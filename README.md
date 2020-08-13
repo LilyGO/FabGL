@@ -1,5 +1,7 @@
 # FabGL
 
+![image1](https://github.com/LilyGO/FabGL/blob/master/images/VGA32V1.4.jpg)
+
 ![image1](https://github.com/LilyGO/FabGL/blob/master/images/VGA32V1.2.jpg)
 ### VGA Controller, PS/2 Mouse and Keyboard Controller, Graphics Library, Game Engine and ANSI/VT Terminal for the **ESP32**
 
